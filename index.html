@@ -1,180 +1,266 @@
 <!DOCTYPE html>
 <html>
+    <head>
+        <style>
+        .letter {
+            width:1200px;
+        }
+        </style>
+    </head>
     <body>
-    <div id="canvas">
-        <canvas id="myCanvas" width="1200" height="600" style="border:1px solid #000000;"></canvas>
-    </div>
-    <div id="controls">
-        <div>
-            <button onclick="NewTrip()">New trip</button>
-            <button onclick="NewParcel()">New parcel</button>
-            <button onclick="ClearCanvas()">Clear canvas</button>
+        <div id="canvas">
+            <canvas id="myCanvas" width="1200" height="600" style="border:1px solid #000000;"></canvas>
         </div>
-    </div>
-    <script>
-        var tripColor = "#0057b7";
-        var parcelColor = "#ffd700";
-        var c = document.getElementById("myCanvas");
-        var ctx = c.getContext("2d");
+        <div id="controls">
+            <div>
+                <button onclick="NewTrip()">New trip</button>
+                <button onclick="NewParcel()">New parcel</button>
+                <button onclick="ClearCanvas()">Clear canvas</button>
+            </div>
+            <div class="letter">
+                <p>
+                    This page can be considered as a motivation letter for applying to Uber software engineer position.
+                </p>
+                <p>
+                    I am a software developer who have worked, in various companies, positions and technologies for some years. 
+                    I believe I can bring skills to Uber that will help you to build an even better company and deliver better 
+                    value to your customers. I’ve been thinking about what I could do for Uber and came up with a business 
+                    plan extension from which I believe you can profit quite a lot. 
+                    Without further adieu please allow me to describe it. I named it “Project UberEli”.
+                </p>
+                <p>
+                    What I considered one of the main businesses of Uber is passenger transportation. A dedicated trip by a driver 
+                    is done from point A to point B. Let’s call this activity “dimension 1”.
+                    Then I thought, what if there could be other dimensions which could reuse “dimension 1”, 
+                    save resources and give Uber an edge against competitors? This “dimension 2” that I mention could be parcel 
+                    delivery. And why is it “dimension 2”? Because parcel delivery won’t need to have a dedicated trip from 
+                    point A to point B. Uber drivers move around the city all the time. And parcels can be delivered 
+                    asynchronously. The basic algorithm is:
+                </p>
+                <ul>
+                    <li>Driver gets to a point A to pickup a passenger</li>
+                    <li>Driver takes passenger to point B</li>
+                    <li>Driver picks up a parcel near point B</li>
+                    <li>Driver continues transporting passengers, until one of the passengers’ destination is close enough to parcel’s destination</li>
+                    <li>After delivering this passenger driver may deliver the parcel to its destination</li>
+                </ul>
+                <p>
+                    This algorithm illustrated the fact that there was no dedicated trip planned and executed for the parcel. 
+                    Parcel was traveling in the car trunk while the driver was transporting passengers. Other parcel delivery 
+                    companies have to plant trips and make them. Uber in this case can avoid that.
+                    When will it work? It won’t work with parcels that have dedicated pickup/delivery times. Because you can’t 
+                    move around the city with the parcel for unlimited time. But it will work when there are no time restrictions 
+                    or time windows are wide. Examples of that are pretty much any online purchases when the shop promises to 
+                    deliver within a day or two and the thing is small enough to fit into a regular car trunk. And there is no 
+                    need to mention how big this market is.
+                </p>
+                <p>
+                    For example, a shop’s customer buys a laptop. Shop promises to deliver it within two days. Then Uber drivers 
+                    will be able to pick up the parcel the same day and carry it around for two days. I do not have the data for 
+                    Uber driver’s movement, but I am predicting that statistically the driver will eventually get close enough to 
+                    the parcel destination within those two days. This idea of course should be investigated using data and proved 
+                    to be possible to work. Since I cannot do that, I thought I could illustrate this idea at least a little bit. 
+                    I created the canvas above where you can draw trips and parcels. If you create a situation when the parcel pickup point 
+                    is close enough to the passenger trip destination - it will be marked by a circle. Also if the parcel 
+                    destination point is close to the passenger destination location - it will also mark that with a circle.
+                </p>
+                <p>
+                    Please check the canvas of how the algorithm could look like. Blue lines represent passenger trips and yellow lines represent 
+                    parcels. Red circles show that these trips can be combined. The main point to observe is that there is no 
+                    dedicated trip to deliver the parcel - it will be delivered while passengers are delivered.
+                </p>
+            </div>
+        </div>
+        <script>
+            var tripColor = "#0057b7";
+            var parcelColor = "#ffd700";
+            var c = document.getElementById("myCanvas");
+            var ctx = c.getContext("2d");
 
-        var trips = [];
-        var parcels = [];
-        var tripStart = [];
-        var tripDestination = [];
-        var parcelStart = [];
-        var parcelDestination = [];
-        
-        var tripRegistrationType  = "trip";
-        var parcelRegistrationType = "parcel";
-        var registrationType = "";
-        var registeringDestination = false;
-        var registeringParcel = false;
-        function NewTrip(){
-            tripStart = [];
-            tripDestination = [];
-            registeringDestination = false;
-            registrationType = tripRegistrationType;
-        }
-        function NewParcel(){
-            parcelStart = [];
-            parcelDestination = [];
-            registeringDestination = false;
-            registrationType = parcelRegistrationType;
-        }
-        function ClearCanvas(){
-            ctx.clearRect(0, 0, c.width, c.height);
-            trips = [];
-            parcels = [];
-            tripStart = [];
-            tripDestination = [];
-            parcelStart = [];
-            parcelDestination = [];
-            registrationType = "";
-            registeringDestination = false;
-        }
+            var trips = [];
+            var parcels = [];
+            var tripStart = [];
+            var tripDestination = [];
+            var parcelStart = [];
+            var parcelDestination = [];
+            
+            var tripRegistrationType  = "trip";
+            var parcelRegistrationType = "parcel";
+            var registrationType = "";
+            var registeringDestination = false;
+            var registeringParcel = false;
 
-        function SaveCoords(type){
-            if (type === "trip" && tripStart.length && tripDestination.length){
+            (function() {
+                tripStart = [154,402];
+                tripDestination = [462,257];
                 let trip = [tripStart, tripDestination];
                 trips.push(trip);
-                tripStart = [];
-                tripDestination = [];                
-            } else if (type === "parcel" && parcelStart.length && parcelDestination.length){
+                tripStart = [487,259];
+                tripDestination = [844,325];
+                trip = [tripStart, tripDestination];
+                trips.push(trip);
+                tripStart = [825,338];
+                tripDestination = [499,440];
+                trip = [tripStart, tripDestination];
+                trips.push(trip);
+
+                parcelStart = [472,272];
+                parcelDestination = [467,447];
                 let parcel = [parcelStart, parcelDestination];
                 parcels.push(parcel);
-                parcelStart = []
-                parcelDestination = [];
-            }
-            
-            Redraw();
-        }
-        function Redraw(){
-            ctx.clearRect(0, 0, c.width, c.height);
-
-            for (let i = 0; i < trips.length; i++){
-                DrawLine(trips[i][0], trips[i][1], tripColor);
-            }
-            
-            for (let i = 0; i < parcels.length; i++){
-                DrawLine(parcels[i][0], parcels[i][1], parcelColor);
-            }
-
-            DrawConnections();
-        }
-        function DrawConnections(){
-            for (let i = 0; i < trips.length; i++){
-                for (let j = 0; j < parcels.length; j++){
-                    if (GetDistance(parcels[j][0], trips[i][1]) < 50){
-                        DrawCircle(trips[i][1]);
-                    }
-                    if (GetDistance(parcels[j][1], trips[i][1]) < 50){
-                        DrawCircle(trips[i][1]);
-                    }
-                }
-            }
-        }
-        function GetDistance(p1, p2){
-            var x = Math.abs(p1[0] - p2[0]);
-            var y = Math.abs(p1[1] - p2[1]);
-            return Math.sqrt(x*x + y*y);
-        }
-        function DrawCircle(tripStart){
-            ctx.beginPath();
-            ctx.arc(tripStart[0], tripStart[1], 50, 0, 2 * Math.PI, false);
-            ctx.strokeStyle = "#FF0000";
-            ctx.stroke();
-            ctx.setTransform(1,0,0,1,0,0);
-        }
-        function DrawLine(start, destination, color){
-            var dx=destination[0]-start[0];
-            var dy=destination[1]-start[1];
-            var angle=Math.atan2(dy,dx);
-            var length=Math.sqrt(dx*dx+dy*dy);
-            
-            ctx.translate(start[0],start[1]);
-            ctx.rotate(angle);
-            ctx.beginPath();
-            ctx.moveTo(0,0);
-            ctx.lineTo(length,0);
-            ctx.strokeStyle = color;
-
-            ctx.moveTo(length-5,-5);
-            ctx.lineTo(length,0);
-            ctx.lineTo(length-5,5);
-
-            ctx.stroke();
-            ctx.setTransform(1,0,0,1,0,0);
-        }
-
-        c.addEventListener('mousedown', function(e) {
-            if (registrationType !== tripRegistrationType && registrationType !== parcelRegistrationType){
-                return;
-            }
-            const rect = c.getBoundingClientRect();
-            const x = e.clientX - rect.left;
-            const y = e.clientY - rect.top;
-            if (registrationType === tripRegistrationType){
-                if (!registeringDestination){
-                    tripStart = [x, y];
-                    registeringDestination = true;
-                    return;
-                }
-                if (registeringDestination){
-                    tripDestination = [x, y];
-                    registeringDestination = false;
-                    registrationType = "";
-                    SaveCoords("trip");
-                }
-            }
-            if (registrationType === parcelRegistrationType){
-                if (!registeringDestination){
-                    parcelStart = [x, y];
-                    registeringDestination = true;
-                    return;
-                }
-                if (registeringDestination){
-                    parcelDestination = [x, y];
-                    registeringDestination = false;
-                    registrationType = "";
-                    SaveCoords("parcel");
-                }
-            }
-        });
-        c.addEventListener("mousemove", function(e) { 
-            if (registeringDestination){
                 Redraw();
-                var cRect = canvas.getBoundingClientRect(); 
-                var canvasX = Math.round(e.clientX - cRect.left);
-                var canvasY = Math.round(e.clientY - cRect.top);
+            })();
+
+            function NewTrip(){
+                tripStart = [];
+                tripDestination = [];
+                registeringDestination = false;
+                registrationType = tripRegistrationType;
+            }
+            function NewParcel(){
+                parcelStart = [];
+                parcelDestination = [];
+                registeringDestination = false;
+                registrationType = parcelRegistrationType;
+            }
+            function ClearCanvas(){
+                ctx.clearRect(0, 0, c.width, c.height);
+                trips = [];
+                parcels = [];
+                tripStart = [];
+                tripDestination = [];
+                parcelStart = [];
+                parcelDestination = [];
+                registrationType = "";
+                registeringDestination = false;
+            }
+
+            function SaveCoords(type){
+                console.log("trip start: " + tripStart);
+                console.log("trip end: " + tripDestination);
+                console.log("parcel start: " + parcelStart);
+                console.log("parcel end: " + parcelDestination);
+                if (type === "trip" && tripStart.length && tripDestination.length){
+                    let trip = [tripStart, tripDestination];
+                    trips.push(trip);
+                    tripStart = [];
+                    tripDestination = [];                
+                } else if (type === "parcel" && parcelStart.length && parcelDestination.length){
+                    let parcel = [parcelStart, parcelDestination];
+                    parcels.push(parcel);
+                    parcelStart = []
+                    parcelDestination = [];
+                }
+                
+                Redraw();
+            }
+            function Redraw(){
+                ctx.clearRect(0, 0, c.width, c.height);
+
+                for (let i = 0; i < trips.length; i++){
+                    DrawLine(trips[i][0], trips[i][1], tripColor);
+                }
+                
+                for (let i = 0; i < parcels.length; i++){
+                    DrawLine(parcels[i][0], parcels[i][1], parcelColor);
+                }
+
+                DrawConnections();
+            }
+            function DrawConnections(){
+                for (let i = 0; i < trips.length; i++){
+                    for (let j = 0; j < parcels.length; j++){
+                        if (GetDistance(parcels[j][0], trips[i][1]) < 50){
+                            DrawCircle(trips[i][1]);
+                        }
+                        if (GetDistance(parcels[j][1], trips[i][1]) < 50){
+                            DrawCircle(trips[i][1]);
+                        }
+                    }
+                }
+            }
+            function GetDistance(p1, p2){
+                var x = Math.abs(p1[0] - p2[0]);
+                var y = Math.abs(p1[1] - p2[1]);
+                return Math.sqrt(x*x + y*y);
+            }
+            function DrawCircle(tripStart){
+                ctx.beginPath();
+                ctx.arc(tripStart[0], tripStart[1], 50, 0, 2 * Math.PI, false);
+                ctx.strokeStyle = "#FF0000";
+                ctx.stroke();
+                ctx.setTransform(1,0,0,1,0,0);
+            }
+            function DrawLine(start, destination, color){
+                var dx=destination[0]-start[0];
+                var dy=destination[1]-start[1];
+                var angle=Math.atan2(dy,dx);
+                var length=Math.sqrt(dx*dx+dy*dy);
+                
+                ctx.translate(start[0],start[1]);
+                ctx.rotate(angle);
+                ctx.beginPath();
+                ctx.moveTo(0,0);
+                ctx.lineTo(length,0);
+                ctx.strokeStyle = color;
+
+                ctx.moveTo(length-5,-5);
+                ctx.lineTo(length,0);
+                ctx.lineTo(length-5,5);
+
+                ctx.stroke();
+                ctx.setTransform(1,0,0,1,0,0);
+            }
+
+            c.addEventListener('mousedown', function(e) {
+                if (registrationType !== tripRegistrationType && registrationType !== parcelRegistrationType){
+                    return;
+                }
+                const rect = c.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
                 if (registrationType === tripRegistrationType){
-                    DrawLine(tripStart, [canvasX, canvasY], tripColor)
+                    if (!registeringDestination){
+                        tripStart = [x, y];
+                        registeringDestination = true;
+                        return;
+                    }
+                    if (registeringDestination){
+                        tripDestination = [x, y];
+                        registeringDestination = false;
+                        registrationType = "";
+                        SaveCoords("trip");
+                    }
                 }
                 if (registrationType === parcelRegistrationType){
-                    DrawLine(parcelStart, [canvasX, canvasY], parcelColor)
+                    if (!registeringDestination){
+                        parcelStart = [x, y];
+                        registeringDestination = true;
+                        return;
+                    }
+                    if (registeringDestination){
+                        parcelDestination = [x, y];
+                        registeringDestination = false;
+                        registrationType = "";
+                        SaveCoords("parcel");
+                    }
                 }
-            }
-        });
-    </script>
+            });
+            c.addEventListener("mousemove", function(e) { 
+                if (registeringDestination){
+                    Redraw();
+                    var cRect = canvas.getBoundingClientRect(); 
+                    var canvasX = Math.round(e.clientX - cRect.left);
+                    var canvasY = Math.round(e.clientY - cRect.top);
+                    if (registrationType === tripRegistrationType){
+                        DrawLine(tripStart, [canvasX, canvasY], tripColor)
+                    }
+                    if (registrationType === parcelRegistrationType){
+                        DrawLine(parcelStart, [canvasX, canvasY], parcelColor)
+                    }
+                }
+            });
+        </script>
     </body>
 </html>
 
