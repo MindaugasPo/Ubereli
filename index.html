@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+    <body>
+    <div id="canvas">
+        <canvas id="myCanvas" width="1200" height="600" style="border:1px solid #000000;"></canvas>
+    </div>
+    <div id="controls">
+        <div>
+            <button onclick="NewTrip()">New trip</button>
+            <button onclick="NewParcel()">New parcel</button>
+            <button onclick="ClearCanvas()">Clear canvas</button>
+        </div>
+    </div>
+    <script>
+        var tripColor = "#0057b7";
+        var parcelColor = "#ffd700";
+        var c = document.getElementById("myCanvas");
+        var ctx = c.getContext("2d");
+
+        var trips = [];
+        var parcels = [];
+        var tripStart = [];
+        var tripDestination = [];
+        var parcelStart = [];
+        var parcelDestination = [];
+        
+        var tripRegistrationType  = "trip";
+        var parcelRegistrationType = "parcel";
+        var registrationType = "";
+        var registeringDestination = false;
+        var registeringParcel = false;
+        function NewTrip(){
+            tripStart = [];
+            tripDestination = [];
+            registeringDestination = false;
+            registrationType = tripRegistrationType;
+        }
+        function NewParcel(){
+            parcelStart = [];
+            parcelDestination = [];
+            registeringDestination = false;
+            registrationType = parcelRegistrationType;
+        }
+        function ClearCanvas(){
+            ctx.clearRect(0, 0, c.width, c.height);
+            trips = [];
+            parcels = [];
+            tripStart = [];
+            tripDestination = [];
+            parcelStart = [];
+            parcelDestination = [];
+            registrationType = "";
+            registeringDestination = false;
+        }
+
+        function SaveCoords(type){
+            if (type === "trip" && tripStart.length && tripDestination.length){
+                let trip = [tripStart, tripDestination];
+                trips.push(trip);
+                tripStart = [];
+                tripDestination = [];                
+            } else if (type === "parcel" && parcelStart.length && parcelDestination.length){
+                let parcel = [parcelStart, parcelDestination];
+                parcels.push(parcel);
+                parcelStart = []
+                parcelDestination = [];
+            }
+            
+            Redraw();
+        }
+        function Redraw(){
+            ctx.clearRect(0, 0, c.width, c.height);
+
+            for (let i = 0; i < trips.length; i++){
+                DrawLine(trips[i][0], trips[i][1], tripColor);
+            }
+            
+            for (let i = 0; i < parcels.length; i++){
+                DrawLine(parcels[i][0], parcels[i][1], parcelColor);
+            }
+
+            DrawConnections();
+        }
+        function DrawConnections(){
+            for (let i = 0; i < trips.length; i++){
+                for (let j = 0; j < parcels.length; j++){
+                    if (GetDistance(parcels[j][0], trips[i][1]) < 50){
+                        DrawCircle(trips[i][1]);
+                    }
+                    if (GetDistance(parcels[j][1], trips[i][1]) < 50){
+                        DrawCircle(trips[i][1]);
+                    }
+                }
+            }
+        }
+        function GetDistance(p1, p2){
+            var x = Math.abs(p1[0] - p2[0]);
+            var y = Math.abs(p1[1] - p2[1]);
+            return Math.sqrt(x*x + y*y);
+        }
+        function DrawCircle(tripStart){
+            ctx.beginPath();
+            ctx.arc(tripStart[0], tripStart[1], 50, 0, 2 * Math.PI, false);
+            ctx.strokeStyle = "#FF0000";
+            ctx.stroke();
+            ctx.setTransform(1,0,0,1,0,0);
+        }
+        function DrawLine(start, destination, color){
+            var dx=destination[0]-start[0];
+            var dy=destination[1]-start[1];
+            var angle=Math.atan2(dy,dx);
+            var length=Math.sqrt(dx*dx+dy*dy);
+            
+            ctx.translate(start[0],start[1]);
+            ctx.rotate(angle);
+            ctx.beginPath();
+            ctx.moveTo(0,0);
+            ctx.lineTo(length,0);
+            ctx.strokeStyle = color;
+
+            ctx.moveTo(length-5,-5);
+            ctx.lineTo(length,0);
+            ctx.lineTo(length-5,5);
+
+            ctx.stroke();
+            ctx.setTransform(1,0,0,1,0,0);
+        }
+
+        c.addEventListener('mousedown', function(e) {
+            if (registrationType !== tripRegistrationType && registrationType !== parcelRegistrationType){
+                return;
+            }
+            const rect = c.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            if (registrationType === tripRegistrationType){
+                if (!registeringDestination){
+                    tripStart = [x, y];
+                    registeringDestination = true;
+                    return;
+                }
+                if (registeringDestination){
+                    tripDestination = [x, y];
+                    registeringDestination = false;
+                    registrationType = "";
+                    SaveCoords("trip");
+                }
+            }
+            if (registrationType === parcelRegistrationType){
+                if (!registeringDestination){
+                    parcelStart = [x, y];
+                    registeringDestination = true;
+                    return;
+                }
+                if (registeringDestination){
+                    parcelDestination = [x, y];
+                    registeringDestination = false;
+                    registrationType = "";
+                    SaveCoords("parcel");
+                }
+            }
+        });
+        c.addEventListener("mousemove", function(e) { 
+            if (registeringDestination){
+                Redraw();
+                var cRect = canvas.getBoundingClientRect(); 
+                var canvasX = Math.round(e.clientX - cRect.left);
+                var canvasY = Math.round(e.clientY - cRect.top);
+                if (registrationType === tripRegistrationType){
+                    DrawLine(tripStart, [canvasX, canvasY], tripColor)
+                }
+                if (registrationType === parcelRegistrationType){
+                    DrawLine(parcelStart, [canvasX, canvasY], parcelColor)
+                }
+            }
+        });
+    </script>
+    </body>
+</html>
